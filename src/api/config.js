@@ -35,7 +35,7 @@ const authInterceptor = (config) => {
 };
 
 const config = {
-  baseURL: process.env.VUE_APP_API_HOST,
+  baseURL: 'https://api.ilmonline.uz/',
   timeout: 60 * 1000, // Timeout
   headers: {
     'Access-Control-Allow-Origin': '*',

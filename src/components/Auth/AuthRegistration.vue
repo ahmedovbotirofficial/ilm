@@ -63,19 +63,18 @@
       {{ $t('titles.or') }}
     </div>
 
-    <div class="auth_form__inputs">
-      <div
-        class="registration_password_tooltip"
-        @mouseover="isTooltipHover = true"
-        @mouseleave="isTooltipHover = false"
-      >
-        <svg-icon v-if="isTooltipHover" name="tooltip_icon_hover" />
-        <svg-icon v-else name="tooltip_icon" />
-      </div>
-
-      <RegistrationTooltip v-if="isTooltipHover" />
-
-      <TextField
+    <div class="forms w-100">
+      <div class="auth_form__inputs">
+        <div
+          class="registration_password_tooltip"
+          @mouseover="isTooltipHover = true"
+          @mouseleave="isTooltipHover = false"
+        >
+          <svg-icon v-if="isTooltipHover" name="tooltip_icon_hover" />
+          <svg-icon v-else name="tooltip_icon" />
+        </div>
+        <RegistrationTooltip v-if="isTooltipHover" />
+        <!-- <TextField
         id="fullName"
         v-model.trim="fullName"
         :value="fullName"
@@ -84,20 +83,36 @@
         :placeholder="$t('form.short_full_name')"
         type="text"
         name="full_name"
-      />
-      <TextField
-        id="login"
-        v-model.trim="email"
-        :value="email"
-        :error="isEmailError"
-        :error-txt="emailErrorText"
-        :placeholder="'Email'"
-        type="text"
-        name="email"
-        @input="dropError"
-      />
+      /> -->
+        <v-text-field
+          v-model.trim="fullName"
+          :value="fullName"
+          filled
+          name="full_name"
+          :label="$t('form.short_full_name')"
+        ></v-text-field>
+        <div>
+          <!-- <TextField
+          id="login"
+          v-model.trim="phone"
+          :value="phone"
+          :error="isPhoneError"
+          :error-txt="PhoneErrorText"
+          :placeholder="$t('form.phone_number')"
+          type="number"
+          @input="dropError"
+        /> -->
 
-      <TextField
+          <v-text-field
+            filled
+            v-model.trim="phone"
+            :value="phone"
+            name="phone"
+            :label="$t('form.phone_number')"
+          ></v-text-field>
+        </div>
+
+        <!-- <TextField
         id="password"
         v-model.trim="password"
         :value="password"
@@ -109,8 +124,23 @@
         :type="'password'"
         name="password"
         autocomplete="off"
-      />
-      <TextField
+      /> -->
+        <v-text-field
+          id="password"
+          v-model.trim="password"
+          :value="password"
+          :error="isPasswordError"
+          :error-txt="passwordErrorText"
+          tooltip-pass
+          filled
+          :label="$t('form.password_placeholder')"
+          is-password
+          :type="'password'"
+          name="password"
+          autocomplete="off"
+        ></v-text-field>
+
+        <!-- <TextField
         id="confirm_password"
         v-model.trim="confirmPassword"
         :placeholder="$t('form.reapet_password_placeholder')"
@@ -120,25 +150,60 @@
         :type="'password'"
         name="confirm_password"
         autocomplete="off"
-      />
+      /> -->
+        <v-text-field
+          filled
+          :label="$t('form.reapet_password_placeholder')"
+          :error="isConfirmPasswordError"
+          :error-txt="confirmPasswordErrorText"
+          is-password
+          :type="'password'"
+          name="confirm_password"
+          autocomplete="off"
+        ></v-text-field>
+        <ButtonBase
+          color="orange"
+          size="max"
+          type="submit"
+          class="auth_form__sign_in_btn"
+          @click.native="singUp"
+        >
+          <span v-if="!isLoader">{{ $t('form.register') }}</span>
+          <span v-else> <Loader color="white" size="small" /> </span
+        ></ButtonBase>
+      </div>
+
+      <div class="auth__policy">
+        {{ $t('form.policy_info') }}
+        <span @click="goToPolicy">
+          {{ $t('form.policy_info_url') }}
+        </span>
+      </div>
     </div>
 
-    <ButtonBase
-      color="orange"
-      size="max"
-      type="submit"
-      class="auth_form__sign_in_btn"
-      @click.native="singUp"
-    >
-      <span v-if="!isLoader">{{ $t('form.register') }}</span>
-      <span v-else> <Loader color="white" size="small" /> </span
-    ></ButtonBase>
+    <div class="formsCode">
+      <Heading level="3" class="auth_form__title codeTitle">
+        Telefon raqamga yuborilgan kodni kiriting
+      </Heading>
+      <v-text-field
+        filled
+        :label="code"
+        :error="isConfirmPasswordError"
+        :error-txt="confirmPasswordErrorText"
+        :type="'text'"
+        name="sms_code"
+      ></v-text-field>
 
-    <div class="auth__policy">
-      {{ $t('form.policy_info') }}
-      <span @click="goToPolicy">
-        {{ $t('form.policy_info_url') }}
-      </span>
+      <ButtonBase
+        color="orange"
+        size="max"
+        type="submit"
+        class="auth_form__sign_in_btn"
+        @click.native="codeUp"
+      >
+        <span v-if="!isLoader">{{ $t('form.register') }}</span>
+        <span v-else> <Loader color="white" size="small" /> </span
+      ></ButtonBase>
     </div>
   </form>
 </template>
@@ -155,9 +220,10 @@ import { setToLS, getFromLS } from '../../library/helpers';
 import signUpValidation from '@/mixins/validation/forms/signup.js';
 import { mapGetters } from 'vuex';
 import { COURSES_MODES } from '@/types/constants';
-
+import ModalAuth from './ModalAuth.vue';
 export default {
   components: {
+    ModalAuth,
     Heading,
     ButtonBase,
     TextField,
@@ -176,10 +242,10 @@ export default {
 
       fullName: '',
 
-      email: '',
+      phone: '',
       password: '',
       confirmPassword: '',
-
+      sms_code: '',
       referer: {
         value: '',
       },
@@ -246,7 +312,7 @@ export default {
   methods: {
     dropError() {
       this.$store.commit('RESET_ERRORS');
-      this.resetServerError('email');
+      this.resetServerError('phone');
     },
     chooseProfile(who) {
       this.isSelectedRole.value = who;
@@ -262,50 +328,78 @@ export default {
         return;
       }
 
-      const url = process.env.VUE_APP_API_HOST + '/auth/social/sign-in';
+      const url = 'api.ilmonline.uz' + '/auth/social/sign-in';
       window.open(`${url}/${id}?role=${this.isSelectedRole.value}`, '_self');
     },
 
     async singUp() {
-      // console.log('before invalid', this.$v.$invalid);
-      if (this.$v.$invalid) {
-        this.$v.$touch();
-        return;
+      // // console.log('before invalid', this.$v.$invalid);
+      // if (this.$v.$invalid) {
+      //   this.$v.$touch();
+      //   return;
+      // }
+
+      // let data = {
+      //   full_name: this.fullName,
+      //   phone: this.phone,
+      //   password: this.password,
+      //   password_confirmation: this.confirmPassword,
+      //   role: this.isSelectedRole.value,
+      // };
+
+      // if (this.referer.value.length > 0) {
+      //   data['referer'] = this.referer.value;
+      // }
+
+      // this.isLoader = true;
+      // let isActiveExistPhone = await this.$store.dispatch('Phone', {
+      //   phone: this.phone,
+      // });
+      // await this.$store.dispatch('registration', data);
+
+      // if (
+      //   Object.keys(this.getErrors).length === 0 ||
+      //   (!isActiveExistPhone.is_active && isActiveExistPhone.exists)
+      // ) {
+      //   this.$store.commit('SET_MODAL', {
+      //     state: true,
+      //     name: `verification`,
+      //     props: {
+      //       phone: this.phone,
+      //       isResentPassword:
+      //         !isActiveExistPhone.is_active && isActiveExistPhone.exists,
+      //     },
+      //   });
+      // }
+      // this.isLoader = false;
+      let numSend = this.phone;
+      let passwords = this.password;
+      let confirmPas = this.confirmPassword;
+      console.log(numSend);
+      localStorage.setItem('phone', this.phone);
+      if (passwords == confirmPas) {
+        document.querySelector('.forms').style.display = 'none';
+        document.querySelector('.formsCode').style.display = 'flex';
       }
+    },
+    async codeUp() {
+      localStorage.setItem('fullName', this.fullName);
+      localStorage.setItem('phone', this.phone);
+      localStorage.setItem('password', this.password);
+      localStorage.setItem('confirmPassword', this.confirmPasswords);
 
       let data = {
         full_name: this.fullName,
-        email: this.email,
+        phone: this.phone,
         password: this.password,
         password_confirmation: this.confirmPassword,
         role: this.isSelectedRole.value,
       };
-
-      if (this.referer.value.length > 0) {
-        data['referer'] = this.referer.value;
+      console.log(data);
+      if (localStorage.getItem('phone') >= 1) {
+        document.querySelector('.formsCode').style.display = 'none';
+        document.querySelector('.forms').style.display = 'block';
       }
-
-      this.isLoader = true;
-      let isActiveExistEmail = await this.$store.dispatch('getExistEmail', {
-        email: this.email,
-      });
-      await this.$store.dispatch('registration', data);
-
-      if (
-        Object.keys(this.getErrors).length === 0 ||
-        (!isActiveExistEmail.is_active && isActiveExistEmail.exists)
-      ) {
-        this.$store.commit('SET_MODAL', {
-          state: true,
-          name: `verification`,
-          props: {
-            email: this.email,
-            isResentPassword:
-              !isActiveExistEmail.is_active && isActiveExistEmail.exists,
-          },
-        });
-      }
-      this.isLoader = false;
     },
   },
 };
@@ -570,4 +664,12 @@ export default {
 .registration_password_tooltip svg
   max-height: 15px
   max-width: 15px
+.formsCode
+  display: none
+  flex-direction: column
+  width: 100%
+  .codeTitle
+      margin-bottom: 1rem
+      font-size: 1.3rem
+      text-align: center
 </style>

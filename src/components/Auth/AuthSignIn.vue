@@ -39,28 +39,19 @@
     </div>
 
     <div class="auth_form__inputs">
-      <TextField
-        id="email"
-        v-model.trim="email"
-        :value="email"
-        :error="isEmailError"
-        :error-txt="emailErrorText"
-        :placeholder="$t('form.login')"
-        type="text"
-        name="email"
-        @input="dropError"
-      />
-      <TextField
+      <div></div>
+      <v-text-field filled prefix="+998"></v-text-field>
+      <v-text-field
+        filled
+        :label="$t('form.password_placeholder')"
         id="password"
         v-model.trim="password"
         :error="isPasswordError"
         :error-txt="passwordErrorText"
-        :placeholder="$t('form.password_placeholder')"
         is-password
         :type="'password'"
         name="password"
-      />
-      <!-- :value="password" -->
+      ></v-text-field>
     </div>
     <div class="auth_form__forgot_pass" @click="openDateModal()">
       {{ $t('buttons.forgot_password') }}
@@ -95,6 +86,7 @@ import Heading from '@/elements/Heading/Heading.vue';
 import ButtonBase from '@/elements/Buttons/ButtonBase.vue';
 import Loader from '@/elements/Loader/Loader.vue';
 import TextField from '@/elements/Inputs/TextField.vue';
+// import ModalAuth from './ModalAuth.vue';
 import { vueTelegramLogin } from 'vue-telegram-login';
 import authValidation from '@/mixins/validation/forms/auth.js';
 import { mapGetters } from 'vuex';
@@ -102,6 +94,7 @@ import { COURSES_MODES } from '@/types/constants';
 
 export default {
   components: {
+    // ModalAuth,
     Heading,
     ButtonBase,
     Loader,
@@ -152,7 +145,11 @@ export default {
     },
     getTelegramBotUsername() {
       console.log(this.getCoursesMode + ' getTelegramBotUsername');
-      console.log(process.env.VUE_APP_TELEGRAM_BOT_USERNAME_PRO + '  ' + process.env.VUE_APP_TELEGRAM_BOT_USERNAME);
+      console.log(
+        process.env.VUE_APP_TELEGRAM_BOT_USERNAME_PRO +
+          '  ' +
+          process.env.VUE_APP_TELEGRAM_BOT_USERNAME
+      );
       return this.getCoursesMode === COURSES_MODES.PRO
         ? process.env.VUE_APP_TELEGRAM_BOT_USERNAME_PRO
         : process.env.VUE_APP_TELEGRAM_BOT_USERNAME;
